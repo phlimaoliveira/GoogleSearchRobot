@@ -1,4 +1,5 @@
 import time, csv
+from csv import writer
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 
@@ -6,10 +7,13 @@ def main():
     with open("palavrasChaveBusca.csv", encoding="utf-8") as pc:
         palavras_chave = csv.reader(pc)
 
-        for i in palavras_chave:
-            searchInGoogle(i[0])
+        with open("resultadoBusca.csv", "w+", encoding="utf-8") as rb:
+            writer = csv.writer(rb, delimiter='\t')
 
-def searchInGoogle(sinonimo_pesquisa):
+            for i in palavras_chave:
+                searchInGoogle(i[0], writer)
+
+def searchInGoogle(sinonimo_pesquisa, writer):
     driver = webdriver.Chrome()
     driver.get('http://www.google.com/')
 
@@ -26,13 +30,19 @@ def searchInGoogle(sinonimo_pesquisa):
         try:
             link = frames_google[i].find_element_by_xpath('./div[1]/div[1]/div[1]/a').get_attribute('href')
             title = frames_google[i].find_element_by_xpath('./div[1]/div[1]/div[1]/a/h3').text
-            links_pesquisa.append(link)
-            titles_pesquisa.append(title)
+            if(title != ''):
+                links_pesquisa.append(link.replace('\t', ''))
+                titles_pesquisa.append(title.replace('\t', ''))
         except:
             print("Este bloco deu algum erro na captura!")
 
+
+    writer.writerow(["Pesquisa feita por:", sinonimo_pesquisa])
+
+    print("Pesquisando: " + sinonimo_pesquisa)
+    # Laço de repetição de preenchimento do CSV
     for i in range(len(links_pesquisa)):
-        print(links_pesquisa[i], '-', titles_pesquisa[i])
+        writer.writerow([titles_pesquisa[i], links_pesquisa[i]])
 
 
 # Press the green button in the gutter to run the script.
